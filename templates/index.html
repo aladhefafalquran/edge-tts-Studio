@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Edge-TTS Studio</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        
+        .main-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(20px);
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            margin: 2rem auto;
+            max-width: 900px;
+            overflow: hidden;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #2196F3, #21CBF3);
+            color: white;
+            padding: 3rem 2rem;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .header::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            right: -50%;
+            bottom: -50%;
+            background: radial-gradient(circle, rgba(255,255,255,0.1) 0%, transparent 70%);
+            animation: float 6s ease-in-out infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-10px) rotate(180deg); }
+        }
+        
+        .header-content {
+            position: relative;
+            z-index: 2;
+        }
+        
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 0.5rem;
+        }
+        
+        .header-icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+        
+        .content {
+            padding: 3rem 2rem;
+        }
+        
+        .btn {
+            border-radius: 12px;
+            font-weight: 600;
+            padding: 0.75rem 1.5rem;
+            transition: all 0.3s ease;
+            border: none;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .btn::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s;
+        }
+        
+        .btn:hover::before {
+            left: 100%;
+        }
+        
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0,0,0,0.15);
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #2196F3, #21CBF3);
+        }
+        
+        .btn-success {
+            background: linear-gradient(135deg, #4CAF50, #45a049);
+        }
+        
+        .btn-info {
+            background: linear-gradient(135deg, #17a2b8, #138496);
+        }
+        
+        .btn-warning {
+            background: linear-gradient(135deg, #ffc107, #e0a800);
+        }
+        
+        .form-control, .form-select {
+            border-radius: 12px;
+            border: 2px solid #e5e7eb;
+            padding: 0.875rem 1rem;
+            transition: all 0.3s ease;
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+        }
+        
+        .form-control:focus, .form-select:focus {
+            border-color: #2196F3;
+            box-shadow: 0 0 0 3px rgba(33, 150, 243, 0.1);
+            background: rgba(255, 255, 255, 1);
+        }
+        
+        .form-label {
+            font-weight: 600;
+            color: #2c3e50;
+            margin-bottom: 0.75rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .status-message {
+            padding: 1rem 1.5rem;
+            border-radius: 12px;
+            margin: 1rem 0;
+            text-align: center;
+            font-weight: 500;
+            animation: slideIn 0.3s ease-out;
+        }
+        
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .status-loading {
+            background: rgba(33, 150, 243, 0.1);
+            color: #2196F3;
+            border: 1px solid rgba(33, 150, 243, 0.3);
+        }
+        
+        .status-success {
+            background: rgba(76, 175, 80, 0.1);
+            color: #4CAF50;
+            border: 1px solid rgba(76, 175, 80, 0.3);
+        }
+        
+        .status-error {
+            background: rgba(244, 67, 54, 0.1);
+            color: #f44336;
+            border: 1px solid rgba(244, 67, 54, 0.3);
+        }
+        
+        .audio-player {
+            background: rgba(248, 249, 250, 0.9);
+            backdrop-filter: blur(10px);
+            border-radius: 15px;
+            padding: 2rem;
+            margin-top: 2rem;
+            display: none;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+        
+        .audio-player.show {
+            display: block;
+            animation: fadeInUp 0.5s ease-out;
+        }
+        
+        @keyframes fadeInUp {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .char-counter {
+            text-align: right;
+            color: #6c757d;
+            font-size: 0.875rem;
+            margin-top: 0.5rem;
+            font-weight: 500;
+        }
+        
+        .char-counter.warning {
+            color: #ffc107;
+        }
+        
+        .char-counter.danger {
+            color: #dc3545;
+        }
+        
+        .voice-info {
+            background: rgba(248, 249, 250, 0.8);
+            padding: 1rem;
+            border-radius: 10px;
+            margin-top: 0.75rem;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border: 1px solid #e9ecef;
+        }
+        
+        .voice-flag {
+            font-size: 1.5rem;
+        }
+        
+        .controls-row {
+            background: rgba(248, 249, 250, 0.5);
+            padding: 1.5rem;
+            border-radius: 15px;
+            margin: 1.5rem 0;
+            border: 1px solid rgba(0,0,0,0.05);
+        }
+        
+        .progress-container {
+            display: none;
+            margin: 1rem 0;
+        }
+        
+        .progress {
+            height: 8px;
+            border-radius: 4px;
+            background: rgba(0,0,0,0.1);
+        }
+        
+        .progress-bar {
+            background: linear-gradient(90deg, #2196F3, #21CBF3);
+            border-radius: 4px;
+            transition: width 0.3s ease;
+        }
+        
+        @media (max-width: 768px) {
+            .content {
+                padding: 2rem 1.5rem;
+            }
+            
+            .header {
+                padding: 2rem 1.5rem;
+            }
+            
+            .header h1 {
+                font-size: 2rem;
+            }
+            
+            .d-md-flex {
+                flex-direction: column !important;
+            }
+            
+            .btn {
+                margin-bottom: 0.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="main-card">
+            <!-- Header -->
+            <div class="header">
+                <div class="header-content">
+                    <div class="header-icon">
+                        <i class="fas fa-microphone-alt"></i>
+                    </div>
+                    <h1>Edge-TTS Studio</h1>
+                    <p class="lead mb-0">Convert your text to natural-sounding speech with AI voices</p>
+                </div>
+            </div>
+
+            <!-- Content -->
+            <div class="content">
+                <!-- Text Input -->
+                <div class="mb-4">
+                    <label for="textInput" class="form-label h5">
+                        <i class="fas fa-edit"></i> Enter Text to Convert
+                    </label>
+                    <textarea 
+                        id="textInput" 
+                        class="form-control" 
+                        rows="6" 
+                        maxlength="5000"
+                        placeholder="Start typing your message here... Perfect for narrations, announcements, or any text you'd like to hear spoken aloud! Try different voices and speeds to find your perfect sound.">
+                    </textarea>
+                    <div class="char-counter">
+                        <span id="charCount">0</span>/5000 characters
+                    </div>
+                </div>
+
+                <!-- Voice and Speed Controls -->
+                <div class="controls-row">
+                    <div class="row">
+                        <div class="col-md-8 mb-3">
+                            <label for="voiceSelect" class="form-label h6">
+                                <i class="fas fa-user-friends"></i> Select Voice
+                            </label>
+                            <select id="voiceSelect" class="form-select">
+                                {% for voice_id, voice_name in voices.items() %}
+                                <option value="{{ voice_id }}">{{ voice_name }}</option>
+                                {% endfor %}
+                            </select>
+                            <div class="voice-info" id="voiceInfo">
+                                <div>
+                                    <small class="text-muted">Select a voice to see details</small>
+                                </div>
+                                <div class="voice-flag" id="voiceFlag">🌍</div>
+                            </div>
+                        </div>
+                        <div class="col-md-4 mb-3">
+                            <label for="speedControl" class="form-label h6">
+                                <i class="fas fa-tachometer-alt"></i> Speech Speed
+                            </label>
+                            <select id="speedControl" class="form-select">
+                                <option value="-50">0.5x (Very Slow)</option>
+                                <option value="-25">0.75x (Slow)</option>
+                                <option value="0" selected>1.0x (Normal)</option>
+                                <option value="25">1.25x (Fast)</option>
+                                <option value="50">1.5x (Very Fast)</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-12">
+                            <label for="pitchControl" class="form-label h6">
+                                <i class="fas fa-music"></i> Voice Pitch
+                            </label>
+                            <select id="pitchControl" class="form-select">
+                                <option value="-30">Lower Pitch</option>
+                                <option value="-15">Slightly Lower</option>
+                                <option value="0" selected>Normal Pitch</option>
+                                <option value="15">Slightly Higher</option>
+                                <option value="30">Higher Pitch</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Buttons -->
+                <div class="d-grid gap-2 d-md-flex justify-content-md-center mb-4">
+                    <button id="previewBtn" class="btn btn-info">
+                        <i class="fas fa-play"></i> Quick Preview
+                    </button>
+                    <button id="generateBtn" class="btn btn-primary btn-lg">
+                        <i class="fas fa-magic"></i> Generate Speech
+                    </button>
+                    <button id="clearBtn" class="btn btn-warning">
+                        <i class="fas fa-eraser"></i> Clear Text
+                    </button>
+                </div>
+
+                <!-- Progress Bar -->
+                <div class="progress-container" id="progressContainer">
+                    <div class="progress">
+                        <div class="progress-bar" id="progressBar" role="progressbar" style="width: 0%"></div>
+                    </div>
+                </div>
+
+                <!-- Status Messages -->
+                <div id="statusContainer"></div>
+
+                <!-- Audio Player -->
+                <div id="audioPlayerContainer" class="audio-player">
+                    <div class="d-flex align-items-center justify-content-between mb-3">
+                        <h5 class="mb-0">
+                            <i class="fas fa-headphones"></i> Your Audio is Ready!
+                        </h5>
+                        <button id="downloadBtn" class="btn btn-success">
+                            <i class="fas fa-download"></i> Download MP3
+                        </button>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <audio id="audioElement" controls class="w-100" style="border-radius: 10px; height: 54px;">
+                            Your browser does not support the audio element.
+                        </audio>
+                    </div>
+                    
+                    <div class="d-flex gap-2 align-items-center justify-content-center">
+                        <button id="playPauseBtn" class="btn btn-primary">
+                            <i class="fas fa-play"></i>
+                        </button>
+                        <button id="stopBtn" class="btn btn-secondary">
+                            <i class="fas fa-stop"></i>
+                        </button>
+                        <button id="regenerateBtn" class="btn btn-info">
+                            <i class="fas fa-redo"></i> Generate New
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <script>
+        // Voice data with flags and details
+        const voiceDetails = {
+            'en-US-AriaNeural': { flag: '🇺🇸', region: 'United States', accent: 'American English' },
+            'en-US-DavisNeural': { flag: '🇺🇸', region: 'United States', accent: 'American English' },
+            'en-US-JennyNeural': { flag: '🇺🇸', region: 'United States', accent: 'American English' },
+            'en-US-GuyNeural': { flag: '🇺🇸', region: 'United States', accent: 'American English' },
+            'en-GB-SoniaNeural': { flag: '🇬🇧', region: 'United Kingdom', accent: 'British English' },
+            'en-GB-RyanNeural': { flag: '🇬🇧', region: 'United Kingdom', accent: 'British English' },
+            'en-AU-NatashaNeural': { flag: '🇦🇺', region: 'Australia', accent: 'Australian English' },
+            'en-AU-WilliamNeural': { flag: '🇦🇺', region: 'Australia', accent: 'Australian English' },
+            'fr-FR-DeniseNeural': { flag: '🇫🇷', region: 'France', accent: 'French' },
+            'fr-FR-HenriNeural': { flag: '🇫🇷', region: 'France', accent: 'French' },
+            'es-ES-ElviraNeural': { flag: '🇪🇸', region: 'Spain', accent: 'Spanish' },
+            'es-ES-AlvaroNeural': { flag: '🇪🇸', region: 'Spain', accent: 'Spanish' },
+            'de-DE-KatjaNeural': { flag: '🇩🇪', region: 'Germany', accent: 'German' },
+            'de-DE-ConradNeural': { flag: '🇩🇪', region: 'Germany', accent: 'German' },
+            'it-IT-ElsaNeural': { flag: '🇮🇹', region: 'Italy', accent: 'Italian' },
+            'it-IT-DiegoNeural': { flag: '🇮🇹', region: 'Italy', accent: 'Italian' },
+            'ja-JP-NanamiNeural': { flag: '🇯🇵', region: 'Japan', accent: 'Japanese' },
+            'ja-JP-KeitaNeural': { flag: '🇯🇵', region: 'Japan', accent: 'Japanese' },
+            'ko-KR-SunHiNeural': { flag: '🇰🇷', region: 'South Korea', accent: 'Korean' },
+            'ko-KR-InJoonNeural': { flag: '🇰🇷', region: 'South Korea', accent: 'Korean' },
+            'zh-CN-XiaoxiaoNeural': { flag: '🇨🇳', region: 'China', accent: 'Mandarin Chinese' },
+            'zh-CN-YunxiNeural': { flag: '🇨🇳', region: 'China', accent: 'Mandarin Chinese' },
+        };
+
+        class EdgeTTSApp {
+            constructor() {
+                this.currentAudio = null;
+                this.isPlaying = false;
+                
+                // Get HTML elements
+                this.textInput = document.getElementById('textInput');
+                this.charCount = document.getElementById('charCount');
+                this.voiceSelect = document.getElementById('voiceSelect');
+                this.voiceInfo = document.getElementById('voiceInfo');
+                this.voiceFlag = document.getElementById('voiceFlag');
+                this.speedControl = document.getElementById('speedControl');
+                this.pitchControl = document.getElementById('pitchControl');
+                this.previewBtn = document.getElementById('previewBtn');
+                this.generateBtn = document.getElementById('generateBtn');
+                this.clearBtn = document.getElementById('clearBtn');
+                this.statusContainer = document.getElementById('statusContainer');
+                this.progressContainer = document.getElementById('progressContainer');
+                this.progressBar = document.getElementById('progressBar');
+                this.audioPlayerContainer = document.getElementById('audioPlayerContainer');
+                this.playPauseBtn = document.getElementById('playPauseBtn');
+                this.stopBtn = document.getElementById('stopBtn');
+                this.regenerateBtn = document.getElementById('regenerateBtn');
+                this.downloadBtn = document.getElementById('downloadBtn');
+                this.audioElement = document.getElementById('audioElement');
+                
+                // Setup event listeners
+                this.setupEvents();
+                
+                // Initialize
+                this.updateCharCount();
+                this.updateVoiceInfo();
+            }
+            
+            setupEvents() {
+                this.textInput.addEventListener('input', () => this.updateCharCount());
+                this.voiceSelect.addEventListener('change', () => this.updateVoiceInfo());
+                this.previewBtn.addEventListener('click', () => this.previewVoice());
+                this.generateBtn.addEventListener('click', () => this.generateSpeech());
+                this.clearBtn.addEventListener('click', () => this.clearText());
+                this.playPauseBtn.addEventListener('click', () => this.togglePlayPause());
+                this.stopBtn.addEventListener('click', () => this.stopAudio());
+                this.regenerateBtn.addEventListener('click', () => this.regenerateAudio());
+                this.downloadBtn.addEventListener('click', () => this.downloadAudio());
+                
+                // Audio events
+                this.audioElement.addEventListener('ended', () => this.onAudioEnded());
+                this.audioElement.addEventListener('play', () => this.onAudioPlay());
+                this.audioElement.addEventListener('pause', () => this.onAudioPause());
+                
+                // Keyboard shortcuts
+                document.addEventListener('keydown', (e) => {
+                    if ((e.ctrlKey || e.metaKey) && e.key === 'Enter' && !this.generateBtn.disabled) {
+                        e.preventDefault();
+                        this.generateSpeech();
+                    }
+                });
+            }
+            
+            updateCharCount() {
+                const count = this.textInput.value.length;
+                this.charCount.textContent = count;
+                
+                const counter = this.charCount.parentElement;
+                counter.className = 'char-counter';
+                
+                if (count > 4000) {
+                    counter.classList.add('danger');
+                } else if (count > 3000) {
+                    counter.classList.add('warning');
+                }
+            }
+            
+            updateVoiceInfo() {
+                const selectedVoice = this.voiceSelect.value;
+                const details = voiceDetails[selectedVoice];
+                
+                if (details) {
+                    this.voiceFlag.textContent = details.flag;
+                    this.voiceInfo.querySelector('div:first-child').innerHTML = `
+                        <strong>${details.region}</strong><br>
+                        <small class="text-muted">${details.accent}</small>
+                    `;
+                }
+            }
+            
+            async previewVoice() {
+                const previewText = "Hello! This is a preview of the selected voice. How does it sound?";
+                await this.generateTTS(previewText, true);
+            }
+            
+            async generateSpeech() {
+                const text = this.textInput.value.trim();
+                
+                if (!text) {
+                    this.showStatus('Please enter some text first!', 'error');
+                    return;
+                }
+                
+                if (text.length > 5000) {
+                    this.showStatus('Text is too long! Maximum 5000 characters allowed.', 'error');
+                    return;
+                }
+                
+                await this.generateTTS(text, false);
+            }
+            
+            async generateTTS(text, isPreview = false) {
+                const btn = isPreview ? this.previewBtn : this.generateBtn;
+                btn.disabled = true;
+                
+                const message = isPreview ? 'Generating voice preview...' : 'Generating speech... Please wait.';
+                this.showStatus(message, 'loading');
+                this.showProgress();
+                
+                try {
+                    const formData = new FormData();
+                    formData.append('text', text);
+                    formData.append('voice', this.voiceSelect.value);
+                    formData.append('rate', this.speedControl.value);
+                    formData.append('pitch', this.pitchControl.value);
+                    
+                    const response = await fetch('/generate', {
+                        method: 'POST',
+                        body: formData
+                    });
+                    
+                    const data = await response.json();
+                    
+                    if (data.success) {
+                        this.playAudio(`/audio/${data.filename}`);
+                        const successMsg = isPreview ? 'Preview generated successfully!' : 'Speech generated successfully!';
+                        this.showStatus(successMsg, 'success');
+                    } else {
+                        this.showStatus('Generation failed: ' + data.error, 'error');
+                    }
+                } catch (error) {
+                    this.showStatus('Generation failed: ' + error.message, 'error');
+                } finally {
+                    btn.disabled = false;
+                    this.hideProgress();
+                }
+            }
+            
+            showProgress() {
+                this.progressContainer.style.display = 'block';
+                let progress = 0;
+                
+                this.progressInterval = setInterval(() => {
+                    progress += Math.random() * 15;
+                    if (progress > 90) progress = 90;
+                    this.progressBar.style.width = progress + '%';
+                }, 200);
+            }
+            
+            hideProgress() {
+                if (this.progressInterval) {
+                    clearInterval(this.progressInterval);
+                }
+                this.progressBar.style.width = '100%';
+                setTimeout(() => {
+                    this.progressContainer.style.display = 'none';
+                    this.progressBar.style.width = '0%';
+                }, 500);
+            }
+            
+            playAudio(audioUrl) {
+                this.currentAudio = audioUrl;
+                this.audioElement.src = audioUrl;
+                this.audioElement.load();
+                this.audioElement.play();
+                this.audioPlayerContainer.classList.add('show');
+                this.audioPlayerContainer.scrollIntoView({ behavior: 'smooth', block: 'center' });
+            }
+            
+            togglePlayPause() {
+                if (this.isPlaying) {
+                    this.audioElement.pause();
+                } else {
+                    this.audioElement.play();
+                }
+            }
+            
+            stopAudio() {
+                this.audioElement.pause();
+                this.audioElement.currentTime = 0;
+            }
+            
+            regenerateAudio() {
+                this.audioPlayerContainer.classList.remove('show');
+                this.textInput.focus();
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+            }
+            
+            downloadAudio() {
+                if (this.currentAudio) {
+                    const link = document.createElement('a');
+                    link.href = this.currentAudio.replace('/audio/', '/download/');
+                    link.download = `edge-tts-${new Date().toISOString().slice(0,10)}.mp3`;
+                    document.body.appendChild(link);
+                    link.click();
+                    document.body.removeChild(link);
+                    this.showStatus('Download started!', 'success');
+                }
+            }
+            
+            clearText() {
+                if (this.textInput.value.trim() && confirm('Are you sure you want to clear all text?')) {
+                    this.textInput.value = '';
+                    this.updateCharCount();
+                    this.showStatus('Text cleared!', 'success');
+                    this.textInput.focus();
+                }
+            }
+            
+            onAudioPlay() {
+                this.isPlaying = true;
+                this.playPauseBtn.innerHTML = '<i class="fas fa-pause"></i>';
+            }
+            
+            onAudioPause() {
+                this.isPlaying = false;
+                this.playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+            }
+            
+            onAudioEnded() {
+                this.isPlaying = false;
+                this.playPauseBtn.innerHTML = '<i class="fas fa-play"></i>';
+            }
+            
+            showStatus(message, type) {
+                this.statusContainer.innerHTML = '';
+                
+                const statusDiv = document.createElement('div');
+                statusDiv.className = `status-message status-${type}`;
+                
+                if (type === 'loading') {
+                    statusDiv.innerHTML = `<i class="fas fa-spinner fa-spin"></i> ${message}`;
+                } else if (type === 'success') {
+                    statusDiv.innerHTML = `<i class="fas fa-check-circle"></i> ${message}`;
+                } else if (type === 'error') {
+                    statusDiv.innerHTML = `<i class="fas fa-exclamation-triangle"></i> ${message}`;
+                }
+                
+                this.statusContainer.appendChild(statusDiv);
+                
+                // Auto-hide non-loading messages
+                if (type !== 'loading') {
+                    setTimeout(() => {
+                        if (statusDiv.parentNode) {
+                            statusDiv.remove();
+                        }
+                    }, 5000);
+                }
+            }
+        }
+        
+        // Start the application when page loads
+        document.addEventListener('DOMContentLoaded', () => {
+            new EdgeTTSApp();
+            console.log('✅ Edge-TTS Studio loaded successfully!');
+        });
+    </script>
+</body>
+</html>
