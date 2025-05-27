@@ -1,3 +1,16 @@
+#!/usr/bin/env python3
+"""
+Edge-TTS Flask Application
+Text-to-Speech web application using Microsoft Edge TTS
+
+Copyright (c) 2025 Mohammed Khalid
+All rights reserved.
+
+This software is provided 'as-is', without any express or implied warranty.
+In no event will the author be held liable for any damages arising from the 
+use of this software.
+"""
+
 from flask import Flask, render_template, request, send_file, jsonify
 import edge_tts
 import asyncio
