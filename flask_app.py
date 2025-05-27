@@ -4,19 +4,15 @@ import asyncio
 import os
 import uuid
 from datetime import datetime
-import tempfile
 
 app = Flask(__name__)
+app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-change-this')
 
-# Security: Use environment variable or generate random key
-app.secret_key = os.environ.get('SECRET_KEY', 'your-secret-key-change-this-in-production')
-
-# PythonAnywhere-compatible audio directory
-# Use /tmp for temporary files on PythonAnywhere
+# Render-compatible audio directory
 AUDIO_DIR = '/tmp/tts_audio'
 os.makedirs(AUDIO_DIR, exist_ok=True)
 
-# Available voices (same as before)
+# Available voices
 VOICES = {
     'en-US-AriaNeural': 'Aria (US English - Female)',
     'en-US-DavisNeural': 'Davis (US English - Male)',
@@ -45,18 +41,13 @@ VOICES = {
 async def generate_speech(text, voice, rate, pitch):
     """Generate speech using edge-tts"""
     try:
-        # Create unique filename
         filename = f"tts_{uuid.uuid4().hex}.mp3"
         filepath = os.path.join(AUDIO_DIR, filename)
         
-        # Adjust rate and pitch
         rate_str = f"{rate:+d}%" if rate != 0 else "+0%"
         pitch_str = f"{pitch:+d}Hz" if pitch != 0 else "+0Hz"
         
-        # Create TTS communication
         communicate = edge_tts.Communicate(text, voice, rate=rate_str, pitch=pitch_str)
-        
-        # Save the audio
         await communicate.save(filepath)
         
         return filepath, filename
@@ -71,10 +62,10 @@ def cleanup_old_files():
             filepath = os.path.join(AUDIO_DIR, filename)
             if os.path.isfile(filepath):
                 file_time = os.path.getctime(filepath)
-                if current_time - file_time > 3600:  # 1 hour
+                if current_time - file_time > 3600:
                     os.remove(filepath)
-    except Exception as e:
-        print(f"Error cleaning up files: {e}")
+    except Exception:
+        pass
 
 @app.route('/')
 def index():
@@ -86,13 +77,11 @@ def index():
 def generate():
     """Generate TTS audio"""
     try:
-        # Get form data
         text = request.form.get('text', '').strip()
         voice = request.form.get('voice', 'en-US-AriaNeural')
         rate = int(request.form.get('rate', 0))
         pitch = int(request.form.get('pitch', 0))
         
-        # Validate input
         if not text:
             return jsonify({'error': 'Please enter some text'}), 400
         
@@ -102,7 +91,6 @@ def generate():
         if voice not in VOICES:
             return jsonify({'error': 'Invalid voice selected'}), 400
         
-        # Generate speech
         loop = asyncio.new_event_loop()
         asyncio.set_event_loop(loop)
         try:
@@ -148,6 +136,7 @@ def get_voices():
     """Get available voices as JSON"""
     return jsonify(VOICES)
 
-# For PythonAnywhere
+# Important: Render needs this
 if __name__ == '__main__':
-    app.run(debug=False)  # Set debug=False for production
+    port = int(os.environ.get('PORT', 5000))
+    app.run(host='0.0.0.0', port=port, debug=False)
